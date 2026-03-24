@@ -705,34 +705,13 @@
 
     /* Task List Add Modal */
     .task-list-modal {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.9);
       background: var(--bg-card);
       border-radius: var(--radius);
       padding: 24px;
-      width: calc(100% - 60px);
+      width: calc(100% - 40px);
       max-width: 360px;
-      box-shadow: var(--shadow-lg);
+      position: relative;
       z-index: 2001;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .modal-overlay.show ~ .task-list-modal,
-    .modal-overlay.show + * .task-list-modal {
-      opacity: 1;
-      visibility: visible;
-      transform: translate(-50%, -50%) scale(1);
-    }
-
-    /* Show task-list-modal when parent modal-overlay is shown */
-    #taskListModal.show .task-list-modal {
-      opacity: 1;
-      visibility: visible;
-      transform: translate(-50%, -50%) scale(1);
     }
 
     .task-list-modal-title {
@@ -791,16 +770,18 @@
     .must-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: 1fr;
       gap: 12px;
       padding: 4px;
     }
 
     .must-btn-wrap {
       position: relative;
+      aspect-ratio: 1;
     }
 
     .must-btn {
-      aspect-ratio: auto;
+      aspect-ratio: 1;
       border: none;
       border-radius: var(--radius);
       background: var(--must-bg);
@@ -818,7 +799,8 @@
       line-height: 1.3;
       transition: all 0.2s ease;
       position: relative;
-      min-height: 60px;
+      width: 100%;
+      height: 100%;
     }
 
     .must-btn:active {
@@ -880,14 +862,24 @@
       align-items: center;
       justify-content: center;
       z-index: 2000;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.3s ease;
+      display: none;
     }
 
     .modal-overlay.show {
-      opacity: 1;
-      visibility: visible;
+      display: flex;
+    }
+
+    .modal-overlay.show .task-list-modal {
+      display: block;
+    }
+
+    .modal-overlay.show .modal-sheet {
+      display: block;
+    }
+
+    .modal-sheet,
+    .task-list-modal {
+      display: none;
     }
 
     .modal-sheet {
@@ -896,12 +888,8 @@
       padding: 24px;
       width: calc(100% - 40px);
       max-width: 400px;
-      transform: scale(0.9);
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .modal-overlay.show .modal-sheet {
-      transform: scale(1);
+      position: relative;
+      z-index: 2001;
     }
 
     .modal-handle {
