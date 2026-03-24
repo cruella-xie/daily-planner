@@ -1178,112 +1178,223 @@
     /* Mobile responsive - increase sizes for small screens */
     @media screen and (max-width: 480px) {
       :root {
-        --radius: 20px;
-        --radius-sm: 14px;
+        --radius: 24px;
+        --radius-sm: 16px;
+        font-size: 18px;
+      }
+
+      * {
+        font-size: 18px;
       }
 
       body {
-        font-size: 16px;
+        font-size: 18px;
+      }
+
+      html {
+        font-size: 18px;
       }
 
       .header {
-        padding: 16px 16px 12px;
+        padding: 20px 20px 16px;
       }
 
       .date-display {
-        font-size: 15px;
-        margin-bottom: 14px;
+        font-size: 16px;
+        margin-bottom: 16px;
+      }
+
+      .mode-tabs {
+        padding: 6px;
+        gap: 6px;
       }
 
       .mode-tab {
-        padding: 12px 16px;
-        font-size: 16px;
+        padding: 14px 20px;
+        font-size: 17px;
+        border-radius: 10px;
       }
 
       .task-input-container {
-        padding: 14px;
-        margin: 0 14px 14px;
+        padding: 18px;
+        margin: 0 16px 16px;
+        border-radius: var(--radius);
       }
 
       .task-input {
-        padding: 14px 16px;
-        font-size: 16px;
+        padding: 16px 18px;
+        font-size: 17px;
+        border-radius: var(--radius-sm);
+      }
+
+      .add-btn {
+        padding: 14px 20px;
+        font-size: 17px;
+        border-radius: var(--radius-sm);
       }
 
       .task-card {
-        padding: 16px;
-        margin: 0 14px 12px;
+        padding: 20px;
+        margin: 0 16px 14px;
+        border-radius: var(--radius);
       }
 
       .task-title {
-        font-size: 16px;
+        font-size: 18px;
+        margin-bottom: 12px;
       }
 
       .timer-display {
-        font-size: 32px;
+        font-size: 40px;
+      }
+
+      .timer-controls {
+        gap: 12px;
+      }
+
+      .timer-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+      }
+
+      .task-meta {
+        font-size: 14px;
+        margin-top: 12px;
+      }
+
+      .delete-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
       }
 
       .bottom-nav {
-        height: 70px;
+        height: 80px;
         padding-bottom: env(safe-area-inset-bottom);
       }
 
       .nav-item {
-        font-size: 11px;
+        font-size: 13px;
       }
 
       .nav-icon {
-        width: 28px;
-        height: 28px;
+        width: 36px;
+        height: 36px;
+        margin-bottom: 6px;
+      }
+
+      .must-grid {
+        padding: 16px;
+        gap: 12px;
       }
 
       .must-btn {
-        padding: 18px 14px;
+        padding: 24px 16px;
+        font-size: 17px;
+        border-radius: var(--radius);
+        min-height: 70px;
+      }
+
+      .must-header {
+        padding: 20px 16px;
+        font-size: 19px;
+      }
+
+      .reset-btn {
+        padding: 14px 24px;
         font-size: 15px;
+        border-radius: var(--radius-sm);
       }
 
       .calendar-header {
-        padding: 16px 14px;
-        font-size: 17px;
+        padding: 20px 16px;
+        font-size: 19px;
+      }
+
+      .calendar-nav-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
       }
 
       .calendar-grid {
-        padding: 0 14px;
+        padding: 0 12px 16px;
       }
 
       .calendar-day {
-        min-height: 70px;
-        padding: 6px;
-        font-size: 14px;
+        min-height: 80px;
+        padding: 8px;
+        font-size: 16px;
+      }
+
+      .calendar-day-num {
+        font-size: 16px;
+        margin-bottom: 4px;
       }
 
       .cell-schedule {
-        font-size: 10px;
-        padding: 2px 4px;
+        font-size: 11px;
+        padding: 3px 5px;
+        border-radius: 4px;
+        margin-bottom: 2px;
+      }
+
+      .today .calendar-day-num {
+        width: 32px;
+        height: 32px;
+        font-size: 15px;
       }
 
       .popup-content {
-        padding: 28px 24px;
-        margin: 0 24px;
+        padding: 32px 28px;
+        margin: 0 20px;
+        border-radius: var(--radius);
       }
 
       .eye-break-icon {
-        font-size: 80px;
+        font-size: 100px;
+      }
+
+      .popup-text {
+        font-size: 20px;
       }
 
       .btn {
-        padding: 14px 28px;
-        font-size: 15px;
+        padding: 16px 32px;
+        font-size: 17px;
+        border-radius: var(--radius-sm);
       }
 
       .tab-bar {
-        padding: 8px;
-        gap: 6px;
+        padding: 10px;
+        gap: 8px;
       }
 
       .tab-btn {
-        padding: 12px 18px;
-        font-size: 15px;
+        padding: 14px 20px;
+        font-size: 16px;
+        border-radius: var(--radius-sm);
+      }
+
+      .confirm-btn {
+        padding: 16px;
+        font-size: 17px;
+      }
+
+      .dialog-title {
+        font-size: 20px;
+        margin-bottom: 16px;
+      }
+
+      .duration-input-group {
+        margin-bottom: 16px;
+      }
+
+      .duration-input {
+        padding: 14px;
+        font-size: 18px;
+        border-radius: var(--radius-sm);
       }
     }
   </style>
