@@ -800,7 +800,7 @@
     }
 
     .must-btn {
-      aspect-ratio: 1;
+      aspect-ratio: auto;
       border: none;
       border-radius: var(--radius);
       background: var(--must-bg);
@@ -818,6 +818,7 @@
       line-height: 1.3;
       transition: all 0.2s ease;
       position: relative;
+      min-height: 60px;
     }
 
     .must-btn:active {
@@ -830,6 +831,7 @@
     }
 
     .must-btn.add-must {
+      aspect-ratio: 1;
       background: var(--accent-light);
       color: var(--accent);
       font-size: 24px;
