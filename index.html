@@ -26,6 +26,8 @@
       --accent: #7B9E87;
       --accent-light: #E8F0EA;
       --accent-dark: #5D7E67;
+      --must-bg: #E8F5E9;
+      --must-completed: #66BB6A;
       --danger: #E57373;
       --danger-light: #FFEBEE;
       --completed-bg: #E8E8E8;
@@ -484,11 +486,12 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: 64px;
+      height: 75px;
       background: var(--bg-card);
       display: flex;
-      box-shadow: 0 -2px 20px rgba(0,0,0,0.06);
+      box-shadow: 0 -2px 20px rgba(0,0,0,0.08);
       z-index: 1000;
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
     .nav-item {
@@ -497,12 +500,12 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 6px;
       border: none;
       background: transparent;
       color: var(--text-muted);
       font-family: inherit;
-      font-size: 11px;
+      font-size: 12px;
       cursor: pointer;
       transition: color 0.2s ease;
     }
@@ -512,8 +515,8 @@
     }
 
     .nav-icon {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -551,6 +554,27 @@
       transform: rotate(-45deg);
       position: absolute;
       top: 10px;
+    }
+
+    /* Tasks icon - checklist */
+    .nav-icon-tasks::before {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border: 2px solid currentColor;
+      border-radius: 2px;
+      position: absolute;
+      top: 5px;
+    }
+
+    .nav-icon-tasks::after {
+      content: '';
+      width: 8px;
+      height: 2px;
+      background: currentColor;
+      position: absolute;
+      top: 10px;
+      left: 3px;
     }
 
     /* Schedule icon - calendar */
@@ -606,6 +630,164 @@
       transform: scale(0.95);
     }
 
+    /* Task List Page */
+    .tasks-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      padding-top: 4px;
+    }
+
+    .tasks-clear-btn {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--danger);
+      background: var(--danger-light);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tasks-clear-btn:active {
+      transform: scale(0.95);
+      background: var(--danger);
+      color: white;
+    }
+
+    .tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .tasks-list:empty {
+      display: none;
+    }
+
+    .task-item {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .task-item.completed {
+      background: var(--completed-bg);
+    }
+
+    .task-item.completed .task-item-name {
+      color: var(--completed-text);
+      text-decoration: line-through;
+    }
+
+    .task-item-name {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Task List Add Modal */
+    .task-list-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: calc(100% - 60px);
+      max-width: 360px;
+      box-shadow: var(--shadow-lg);
+      z-index: 2001;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.show ~ .task-list-modal,
+    .modal-overlay.show + * .task-list-modal {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* Show task-list-modal when parent modal-overlay is shown */
+    #taskListModal.show .task-list-modal {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .task-list-modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .task-list-modal-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid var(--timeline-track);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      margin-bottom: 16px;
+      transition: border-color 0.2s ease;
+    }
+
+    .task-list-modal-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .task-list-modal-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .task-list-modal-btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .task-list-modal-btn-cancel {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+    }
+
+    .task-list-modal-btn-confirm {
+      background: var(--accent);
+      color: white;
+    }
+
     .must-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -613,16 +795,20 @@
       padding: 4px;
     }
 
+    .must-btn-wrap {
+      position: relative;
+    }
+
     .must-btn {
       aspect-ratio: 1;
       border: none;
       border-radius: var(--radius);
-      background: var(--bg-card);
+      background: var(--must-bg);
       box-shadow: var(--shadow);
       font-family: inherit;
       font-size: 14px;
       font-weight: 500;
-      color: var(--text-primary);
+      color: var(--accent-dark);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -639,8 +825,8 @@
     }
 
     .must-btn.completed {
-      background: var(--completed-bg);
-      color: var(--completed-text);
+      background: var(--must-completed);
+      color: white;
     }
 
     .must-btn.add-must {
@@ -650,7 +836,37 @@
       font-weight: 300;
     }
 
-    /* Must Add Modal */
+    .must-delete-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .must-btn-wrap:hover .must-delete-btn,
+    .must-btn-wrap:active .must-delete-btn {
+      opacity: 1;
+    }
+
+    .must-delete-btn:hover {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    /* Must Add Modal - Centered */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -659,7 +875,7 @@
       bottom: 0;
       background: rgba(0,0,0,0.4);
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
       z-index: 2000;
       opacity: 0;
@@ -674,16 +890,16 @@
 
     .modal-sheet {
       background: var(--bg-card);
-      border-radius: 24px 24px 0 0;
+      border-radius: var(--radius);
       padding: 24px;
-      width: 100%;
-      max-width: 500px;
-      transform: translateY(100%);
+      width: calc(100% - 40px);
+      max-width: 400px;
+      transform: scale(0.9);
       transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .modal-overlay.show .modal-sheet {
-      transform: translateY(0);
+      transform: scale(1);
     }
 
     .modal-handle {
@@ -807,13 +1023,14 @@
       box-shadow: var(--shadow);
       overflow: hidden;
       margin-bottom: 16px;
+      width: 100%;
     }
 
     .calendar-weekdays {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       background: var(--bg-secondary);
-      padding: 8px 0;
+      padding: 10px 0;
     }
 
     .weekday {
@@ -833,11 +1050,12 @@
     .calendar-cell {
       display: flex;
       flex-direction: column;
-      min-height: 32px;
+      min-height: 60px;
+      padding: 4px;
     }
 
     .calendar-cell.empty {
-      min-height: 24px;
+      min-height: 40px;
     }
 
     .calendar-day {
@@ -1270,18 +1488,19 @@
       }
 
       .bottom-nav {
-        height: 80px;
+        height: 90px;
         padding-bottom: env(safe-area-inset-bottom);
       }
 
       .nav-item {
-        font-size: 13px;
+        font-size: 14px;
+        gap: 8px;
       }
 
       .nav-icon {
-        width: 36px;
-        height: 36px;
-        margin-bottom: 6px;
+        width: 40px;
+        height: 40px;
+        margin-bottom: 4px;
       }
 
       .must-grid {
@@ -1319,12 +1538,17 @@
       }
 
       .calendar-grid {
-        padding: 0 12px 16px;
+        padding: 0 10px 20px;
+      }
+
+      .calendar-cell {
+        min-height: 80px;
+        padding: 6px;
       }
 
       .calendar-day {
         min-height: 80px;
-        padding: 8px;
+        padding: 10px;
         font-size: 16px;
       }
 
@@ -1449,6 +1673,19 @@
     <div class="must-grid" id="mustGrid"></div>
   </main>
 
+  <!-- Task List Page -->
+  <main class="page" id="tasksPage">
+    <div class="tasks-header">
+      <span>任务清单</span>
+      <button class="tasks-clear-btn" id="tasksClearBtn">清空</button>
+    </div>
+    <div class="tasks-list" id="tasksList"></div>
+    <button class="add-btn" id="addTaskBtn">
+      <span>+</span>
+      <span>添加任务</span>
+    </button>
+  </main>
+
   <!-- Schedule Page -->
   <main class="page" id="schedulePage">
     <div class="schedule-header">
@@ -1484,6 +1721,10 @@
       <span class="nav-icon nav-icon-must"></span>
       <span>Must</span>
     </button>
+    <button class="nav-item" data-page="tasks">
+      <span class="nav-icon nav-icon-tasks"></span>
+      <span>清单</span>
+    </button>
     <button class="nav-item" data-page="schedule">
       <span class="nav-icon nav-icon-schedule"></span>
       <span>日程</span>
@@ -1510,6 +1751,18 @@
       <div class="modal-actions">
         <button class="modal-btn modal-btn-cancel" id="mustModalCancel">取消</button>
         <button class="modal-btn modal-btn-confirm" id="mustModalConfirm">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task List Add Modal -->
+  <div class="modal-overlay" id="taskListModal">
+    <div class="task-list-modal">
+      <div class="task-list-modal-title">添加任务</div>
+      <input type="text" class="task-list-modal-input" id="taskListNameInput" placeholder="输入任务名称" maxlength="50">
+      <div class="task-list-modal-actions">
+        <button class="task-list-modal-btn task-list-modal-btn-cancel" id="taskListModalCancel">取消</button>
+        <button class="task-list-modal-btn task-list-modal-btn-confirm" id="taskListModalConfirm">确认</button>
       </div>
     </div>
   </div>
@@ -1561,6 +1814,7 @@
       currentPage: 'home',
       tasks: [],
       mustTasks: [],
+      taskItems: [],
       schedules: [],
       currentScheduleDate: null,
       currentMonth: new Date(),
@@ -1574,6 +1828,7 @@
     const STORAGE_KEYS = {
       tasks: 'dailyPlanner_tasks',
       mustTasks: 'dailyPlanner_mustTasks',
+      taskItems: 'dailyPlanner_taskItems',
       schedules: 'dailyPlanner_schedules',
       settings: 'dailyPlanner_settings',
       lastDate: 'dailyPlanner_lastDate'
@@ -1605,11 +1860,13 @@
       checkDate();
       const tasks = loadFromStorage(STORAGE_KEYS.tasks);
       const mustTasks = loadFromStorage(STORAGE_KEYS.mustTasks);
+      const taskItems = loadFromStorage(STORAGE_KEYS.taskItems);
       const schedules = loadFromStorage(STORAGE_KEYS.schedule);
       const settings = loadFromStorage(STORAGE_KEYS.settings);
 
       if (tasks) state.tasks = tasks;
       if (mustTasks) state.mustTasks = mustTasks;
+      if (taskItems) state.taskItems = taskItems;
       if (schedules) state.schedules = schedules;
       if (settings) state.eyeBreakEnabled = settings.eyeBreakEnabled ?? true;
     }
@@ -1620,6 +1877,10 @@
 
     function saveMustTasks() {
       saveToStorage(STORAGE_KEYS.mustTasks, state.mustTasks);
+    }
+
+    function saveTaskItems() {
+      saveToStorage(STORAGE_KEYS.taskItems, state.taskItems);
     }
 
     function saveSchedules() {
@@ -1655,6 +1916,13 @@
     const mustNameInput = $('#mustNameInput');
     const mustModalCancel = $('#mustModalCancel');
     const mustModalConfirm = $('#mustModalConfirm');
+    const taskListModal = $('#taskListModal');
+    const taskListNameInput = $('#taskListNameInput');
+    const taskListModalCancel = $('#taskListModalCancel');
+    const taskListModalConfirm = $('#taskListModalConfirm');
+    const tasksList = $('#tasksList');
+    const addTaskBtn = $('#addTaskBtn');
+    const tasksClearBtn = $('#tasksClearBtn');
     const eyeBreakToggle = $('#eyeBreakToggle');
     const eyeBreakEl = $('#eyeBreak');
     const eyeCountdown = $('#eyeCountdown');
@@ -1765,6 +2033,10 @@
 
       if (page === 'schedule') {
         renderCalendar();
+      }
+
+      if (page === 'tasks') {
+        renderTaskItems();
       }
     }
 
@@ -1905,7 +2177,12 @@
         container.querySelector('.delete-bg').addEventListener('click', (e) => {
           e.stopPropagation();
           if (isSwiped) {
-            deleteTask(container.dataset.id);
+            // Check if it's a task item or a regular task
+            if (container.closest('.tasks-list')) {
+              deleteTaskItem(container.dataset.id);
+            } else {
+              deleteTask(container.dataset.id);
+            }
           }
         });
       });
@@ -2105,27 +2382,14 @@
 
     // ===== Must Tasks =====
     function renderMustTasks() {
-      const defaultMust = [
-        { id: 'water', name: '喝水', completed: false },
-        { id: 'eye', name: '眼保健', completed: false },
-        { id: 'stretch', name: '伸懒腰', completed: false },
-        { id: 'meditate', name: '冥想', completed: false },
-        { id: 'read', name: '读书', completed: false }
-      ];
-
-      const allTasks = [...state.mustTasks];
-      defaultMust.forEach(d => {
-        if (!allTasks.find(t => t.id === d.id)) {
-          allTasks.push({ ...d });
-        }
-      });
-
-      state.mustTasks = allTasks;
-
-      mustGrid.innerHTML = allTasks.map(task => `
-        <button class="must-btn ${task.completed ? 'completed' : ''}" data-id="${task.id}">
-          ${escapeHtml(task.name)}
-        </button>
+      // No default habits - all habits are user-created
+      mustGrid.innerHTML = state.mustTasks.map(task => `
+        <div class="must-btn-wrap" data-id="${task.id}">
+          <button class="must-btn ${task.completed ? 'completed' : ''}" data-id="${task.id}">
+            ${escapeHtml(task.name)}
+          </button>
+          <button class="must-delete-btn" data-id="${task.id}">&times;</button>
+        </div>
       `).join('') + `
         <button class="must-btn add-must" id="addMustBtn">+</button>
       `;
@@ -2135,34 +2399,27 @@
 
     function attachMustTaskListeners() {
       $$('.must-btn:not(.add-must)').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
           toggleMustTask(btn.dataset.id);
         });
+      });
 
-        // Long press to delete (except defaults)
-        let pressTimer;
-        btn.addEventListener('touchstart', () => {
-          pressTimer = setTimeout(() => {
-            const defaultIds = ['water', 'eye', 'stretch', 'meditate', 'read'];
-            if (!defaultIds.includes(btn.dataset.id)) {
-              state.mustTasks = state.mustTasks.filter(t => t.id !== btn.dataset.id);
-              saveMustTasks();
-              renderMustTasks();
-            }
-          }, 800);
-        });
-
-        btn.addEventListener('touchend', () => {
-          clearTimeout(pressTimer);
-        });
-
-        btn.addEventListener('touchmove', () => {
-          clearTimeout(pressTimer);
+      $$('.must-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteMustTask(btn.dataset.id);
         });
       });
 
       $('#addMustBtn').addEventListener('click', showMustModal);
       $('#mustResetBtn').addEventListener('click', resetMustTasks);
+    }
+
+    function deleteMustTask(id) {
+      state.mustTasks = state.mustTasks.filter(t => t.id !== id);
+      saveMustTasks();
+      renderMustTasks();
     }
 
     function toggleMustTask(id) {
@@ -2205,6 +2462,91 @@
       saveMustTasks();
       hideMustModal();
       renderMustTasks();
+    }
+
+    // ===== Task List Page =====
+    function renderTaskItems() {
+      if (state.taskItems.length === 0) {
+        tasksList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">&#9745;</div>
+            <div class="empty-text">暂无任务，添加一个吧</div>
+          </div>
+        `;
+        return;
+      }
+
+      tasksList.innerHTML = state.taskItems.map(item => `
+        <div class="swipe-container" data-id="${item.id}">
+          <div class="swipe-content">
+            <div class="task-item ${item.completed ? 'completed' : ''}" data-id="${item.id}">
+              <button class="checkbox ${item.completed ? 'checked' : ''}" data-id="${item.id}"></button>
+              <span class="task-item-name">${escapeHtml(item.name)}</span>
+            </div>
+          </div>
+          <div class="delete-bg">&#128465;</div>
+        </div>
+      `).join('');
+
+      attachTaskItemListeners();
+      attachSwipeHandlers();
+    }
+
+    function attachTaskItemListeners() {
+      $$('.task-item .checkbox').forEach(cb => {
+        cb.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleTaskItemComplete(cb.dataset.id);
+        });
+      });
+    }
+
+    function toggleTaskItemComplete(id) {
+      const item = state.taskItems.find(t => t.id === id);
+      if (!item) return;
+
+      item.completed = !item.completed;
+      saveTaskItems();
+      renderTaskItems();
+    }
+
+    function deleteTaskItem(id) {
+      state.taskItems = state.taskItems.filter(t => t.id !== id);
+      saveTaskItems();
+      renderTaskItems();
+    }
+
+    function clearAllTaskItems() {
+      showConfirm('清空所有任务', '确定要清空任务清单中的所有任务吗？此操作不可恢复。', () => {
+        state.taskItems = [];
+        saveTaskItems();
+        renderTaskItems();
+      });
+    }
+
+    function showTaskListModal() {
+      taskListModal.classList.add('show');
+      taskListNameInput.value = '';
+      taskListNameInput.focus();
+    }
+
+    function hideTaskListModal() {
+      taskListModal.classList.remove('show');
+    }
+
+    function addTaskItem() {
+      const name = taskListNameInput.value.trim();
+      if (!name) return;
+
+      state.taskItems.push({
+        id: generateId(),
+        name,
+        completed: false
+      });
+
+      saveTaskItems();
+      hideTaskListModal();
+      renderTaskItems();
     }
 
     // ===== Calendar / Schedule =====
@@ -2440,6 +2782,20 @@
       if (e.target === mustModal) hideMustModal();
     });
 
+    // Task list modal events
+    addTaskBtn.addEventListener('click', showTaskListModal);
+    tasksClearBtn.addEventListener('click', clearAllTaskItems);
+    taskListModalCancel.addEventListener('click', hideTaskListModal);
+    taskListModalConfirm.addEventListener('click', addTaskItem);
+    taskListNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        addTaskItem();
+      }
+    });
+    taskListModal.addEventListener('click', (e) => {
+      if (e.target === taskListModal) hideTaskListModal();
+    });
+
     // Schedule events
     prevMonthBtn.addEventListener('click', prevMonth);
     nextMonthBtn.addEventListener('click', nextMonth);
@@ -2485,6 +2841,7 @@
       setMode(state.mode);
       renderTasks();
       renderMustTasks();
+      renderTaskItems();
       updateEyeBreakToggle();
 
       if (state.currentPage === 'home' && state.mode === 'duration') {
