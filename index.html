@@ -67,8 +67,29 @@
     .date-display {
       font-size: 13px;
       color: var(--text-secondary);
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       letter-spacing: 0.5px;
+    }
+
+    .focus-stats {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--accent-light);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+    }
+
+    .focus-stats-icon {
+      font-size: 18px;
+    }
+
+    .focus-stats-text {
+      font-size: 14px;
+      color: var(--accent-dark);
+      font-weight: 500;
     }
 
     .mode-tabs {
@@ -1643,6 +1664,10 @@
   <!-- Header -->
   <header class="header" id="mainHeader">
     <div class="date-display" id="dateDisplay"></div>
+    <div class="focus-stats" id="focusStats">
+      <span class="focus-stats-icon">&#128337;</span>
+      <span class="focus-stats-text" id="focusStatsText">今日已专注 0 分钟</span>
+    </div>
     <div class="mode-tabs">
       <button class="mode-tab active" data-mode="duration">时长模式</button>
       <button class="mode-tab" data-mode="timeline">时间轴模式</button>
@@ -2012,6 +2037,34 @@
       dateDisplay.textContent = now.toLocaleDateString('zh-CN', options);
     }
 
+    // ===== Focus Stats =====
+    function updateFocusStats() {
+      let totalSeconds = 0;
+      state.tasks.forEach(task => {
+        // 计算每个任务已专注的时间 = 总时长 - 剩余时间
+        const totalTaskSeconds = task.duration * 60;
+        const spentSeconds = totalTaskSeconds - task.remaining;
+        totalSeconds += Math.max(0, spentSeconds);
+      });
+
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+      let text = '今日已专注 ';
+      if (hours > 0) {
+        text += `${hours} 小时 ${minutes} 分钟`;
+      } else if (minutes > 0) {
+        text += `${minutes} 分钟`;
+      } else {
+        text += '0 分钟';
+      }
+
+      const focusStatsText = $('#focusStatsText');
+      if (focusStatsText) {
+        focusStatsText.textContent = text;
+      }
+    }
+
     // ===== Mode Switching =====
     function setMode(mode) {
       state.mode = mode;
@@ -2235,6 +2288,7 @@
       }, 1000);
 
       renderTasks();
+      updateFocusStats();
     }
 
     function pauseTimer(taskId) {
@@ -2251,6 +2305,7 @@
       }
 
       renderTasks();
+      updateFocusStats();
     }
 
     function completeTask(taskId) {
@@ -2275,9 +2330,11 @@
           // Don't remove from state.tasks, just hide the duration card
           // Timeline mode will show it as completed (grayed out)
           renderTasks();
+          updateFocusStats();
         }, 400);
       } else {
         renderTasks();
+        updateFocusStats();
       }
     }
 
@@ -2311,6 +2368,7 @@
       state.tasks = state.tasks.filter(t => t.id !== taskId);
       saveTasks();
       renderTasks();
+      updateFocusStats();
     }
 
     function clearAllTasks() {
@@ -2323,6 +2381,7 @@
         state.tasks = [];
         saveTasks();
         renderTasks();
+        updateFocusStats();
       });
     }
 
@@ -2393,6 +2452,7 @@
       saveTasks();
       hideAddForm();
       renderTasks();
+      updateFocusStats();
     }
 
     // ===== Must Tasks =====
@@ -2869,6 +2929,7 @@
         }
       });
       renderTasks();
+      updateFocusStats();
     }
 
     // ===== Init =====
@@ -2877,6 +2938,7 @@
       updateDateDisplay();
       setMode(state.mode);
       renderTasks();
+      updateFocusStats();
       renderMustTasks();
       renderTaskItems();
       updateEyeBreakToggle();
