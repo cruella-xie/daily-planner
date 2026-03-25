@@ -229,6 +229,31 @@
       color: white;
     }
 
+    /* Task Delete Button */
+    .task-delete-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: var(--danger-light);
+      color: var(--danger);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .task-delete-btn:active {
+      transform: scale(0.9);
+      background: var(--danger);
+      color: white;
+    }
+
     /* Checkbox */
     .checkbox {
       width: 22px;
@@ -2053,7 +2078,6 @@
         }
       }).join('');
 
-      attachSwipeHandlers();
       attachTaskEventListeners();
     }
 
@@ -2063,20 +2087,16 @@
       const icon = isRunning ? '&#9208;' : '&#9654;';
 
       return `
-        <div class="swipe-container" data-id="${task.id}">
-          <div class="swipe-content">
-            <div class="task-card ${isRunning ? 'running' : ''}" data-id="${task.id}">
-              <div class="task-info">
-                <div class="task-name">${escapeHtml(task.name)}</div>
-                <div class="task-time-range">${task.startTime} - ${task.endTime}</div>
-              </div>
-              <div class="task-timer">
-                <span class="timer-display ${isRunning ? 'running' : ''}">${formatCountdown(remaining)}</span>
-                <button class="play-btn ${isRunning ? 'running' : ''}" data-id="${task.id}">${icon}</button>
-              </div>
-            </div>
+        <div class="task-card ${isRunning ? 'running' : ''}" data-id="${task.id}">
+          <div class="task-info">
+            <div class="task-name">${escapeHtml(task.name)}</div>
+            <div class="task-time-range">${task.startTime} - ${task.endTime}</div>
           </div>
-          <div class="delete-bg">&#128465;</div>
+          <div class="task-timer">
+            <span class="timer-display ${isRunning ? 'running' : ''}">${formatCountdown(remaining)}</span>
+            <button class="play-btn ${isRunning ? 'running' : ''}" data-id="${task.id}">${icon}</button>
+            <button class="task-delete-btn" data-id="${task.id}">&#215;</button>
+          </div>
         </div>
       `;
     }
@@ -2085,15 +2105,11 @@
       const isCompleted = task.completed;
 
       return `
-        <div class="swipe-container" data-id="${task.id}">
-          <div class="swipe-content">
-            <div class="timeline-card ${isCompleted ? 'completed' : ''}" data-id="${task.id}">
-              <button class="checkbox ${isCompleted ? 'checked' : ''}" data-id="${task.id}"></button>
-              <div class="timeline-name">${escapeHtml(task.name)}</div>
-              <div class="timeline-time">${task.startTime} - ${task.endTime}</div>
-            </div>
-          </div>
-          <div class="delete-bg">&#128465;</div>
+        <div class="timeline-card ${isCompleted ? 'completed' : ''}" data-id="${task.id}">
+          <button class="checkbox ${isCompleted ? 'checked' : ''}" data-id="${task.id}"></button>
+          <div class="timeline-name">${escapeHtml(task.name)}</div>
+          <div class="timeline-time">${task.startTime} - ${task.endTime}</div>
+          <button class="task-delete-btn" data-id="${task.id}">&#215;</button>
         </div>
       `;
     }
@@ -2113,6 +2129,14 @@
         cb.addEventListener('click', (e) => {
           e.stopPropagation();
           toggleComplete(cb.dataset.id);
+        });
+      });
+
+      // Delete buttons
+      $$('.task-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteTask(btn.dataset.id);
         });
       });
     }
@@ -2468,19 +2492,14 @@
       }
 
       tasksList.innerHTML = state.taskItems.map(item => `
-        <div class="swipe-container" data-id="${item.id}">
-          <div class="swipe-content">
-            <div class="task-item ${item.completed ? 'completed' : ''}" data-id="${item.id}">
-              <button class="checkbox ${item.completed ? 'checked' : ''}" data-id="${item.id}"></button>
-              <span class="task-item-name">${escapeHtml(item.name)}</span>
-            </div>
-          </div>
-          <div class="delete-bg">&#128465;</div>
+        <div class="task-item ${item.completed ? 'completed' : ''}" data-id="${item.id}">
+          <button class="checkbox ${item.completed ? 'checked' : ''}" data-id="${item.id}"></button>
+          <span class="task-item-name">${escapeHtml(item.name)}</span>
+          <button class="task-delete-btn" data-id="${item.id}">&#215;</button>
         </div>
       `).join('');
 
       attachTaskItemListeners();
-      attachSwipeHandlers();
     }
 
     function attachTaskItemListeners() {
@@ -2488,6 +2507,13 @@
         cb.addEventListener('click', (e) => {
           e.stopPropagation();
           toggleTaskItemComplete(cb.dataset.id);
+        });
+      });
+
+      $$('.task-item .task-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteTaskItem(btn.dataset.id);
         });
       });
     }
