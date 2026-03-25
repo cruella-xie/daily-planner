@@ -88,6 +88,93 @@
       font-weight: 500;
     }
 
+    /* Eye Care Reminder */
+    .eye-care {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      border: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .eye-care.active {
+      border-color: var(--accent);
+    }
+
+    .eye-care.warning {
+      border-color: #FFA726;
+      background: #FFF3E0;
+      animation: eyePulse 1s ease infinite;
+    }
+
+    @keyframes eyePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    .eye-care-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .eye-care.warning .eye-care-text {
+      color: #E65100;
+    }
+
+    .eye-care-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent);
+      transition: width 0.5s linear;
+    }
+
+    .eye-care.warning .eye-care-progress {
+      background: #FFA726;
+      width: 100% !important;
+    }
+
+    .eye-care-status {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .eye-care.warning .eye-care-status {
+      color: #E65100;
+      font-weight: 500;
+    }
+
+    .eye-care-reset {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: none;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .eye-care-reset:hover {
+      background: var(--accent);
+      color: white;
+    }
+
     .mode-tabs {
       display: flex;
       background: var(--bg-secondary);
@@ -220,6 +307,14 @@
 
     .timer-display.running {
       color: var(--accent);
+    }
+
+    .timer-display.overtime {
+      color: #FFA726;
+    }
+
+    .task-card.overtime {
+      border: 2px solid #FFA726;
     }
 
     .play-btn {
@@ -1663,6 +1758,12 @@
     <div class="focus-stats" id="focusStats">
       <span class="focus-stats-text" id="focusStatsText">今日已专注 0 分钟</span>
     </div>
+    <div class="eye-care" id="eyeCare">
+      <span class="eye-care-text">远眺提醒</span>
+      <span class="eye-care-status" id="eyeCareStatus">--:--</span>
+      <button class="eye-care-reset" id="eyeCareReset">↻</button>
+      <div class="eye-care-progress" id="eyeCareProgress"></div>
+    </div>
     <div class="mode-tabs">
       <button class="mode-tab active" data-mode="duration">时长模式</button>
       <button class="mode-tab" data-mode="timeline">时间轴模式</button>
@@ -1856,6 +1957,9 @@
       eyeBreakEnabled: true,
       eyeBreakTimer: null,
       eyeBreakInterval: 30 * 60 * 1000,
+      eyeCareStartTime: null,
+      eyeCareRemaining: 30 * 60,
+      eyeCareInterval: null,
       taskIntervals: {}
     };
 
@@ -1866,7 +1970,8 @@
       taskItems: 'dailyPlanner_taskItems',
       schedules: 'dailyPlanner_schedules',
       settings: 'dailyPlanner_settings',
-      lastDate: 'dailyPlanner_lastDate'
+      lastDate: 'dailyPlanner_lastDate',
+      eyeCare: 'dailyPlanner_eyeCare'
     };
 
     function saveToStorage(key, data) {
@@ -1898,6 +2003,11 @@
       if (taskItems) state.taskItems = taskItems;
       if (schedules) state.schedules = schedules;
       if (settings) state.eyeBreakEnabled = settings.eyeBreakEnabled ?? true;
+
+      const eyeCare = loadFromStorage(STORAGE_KEYS.eyeCare);
+      if (eyeCare) {
+        state.eyeCareRemaining = eyeCare.eyeCareRemaining ?? state.eyeBreakInterval;
+      }
     }
 
     function saveTasks() {
@@ -1956,6 +2066,10 @@
     const eyeBreakEl = $('#eyeBreak');
     const eyeCountdown = $('#eyeCountdown');
     const eyeClose = $('#eyeClose');
+    const eyeCareEl = $('#eyeCare');
+    const eyeCareStatus = $('#eyeCareStatus');
+    const eyeCareProgress = $('#eyeCareProgress');
+    const eyeCareReset = $('#eyeCareReset');
 
     // Schedule elements
     const calendarGrid = $('#calendarGrid');
@@ -1992,6 +2106,12 @@
       const m = Math.floor(seconds / 60);
       const s = seconds % 60;
       return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function formatOvertime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `+${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
 
     function parseTime(timeStr) {
@@ -2036,10 +2156,11 @@
     function updateFocusStats() {
       let totalSeconds = 0;
       state.tasks.forEach(task => {
-        // 计算每个任务已专注的时间 = 总时长 - 剩余时间
+        // 计算每个任务已专注的时间 = 总时长 - 剩余时间 + 正向计时时间
         const totalTaskSeconds = task.duration * 60;
-        const spentSeconds = totalTaskSeconds - task.remaining;
-        totalSeconds += Math.max(0, spentSeconds);
+        const spentSeconds = totalTaskSeconds - Math.max(0, task.remaining);
+        const overtimeSeconds = task.overtime || 0;
+        totalSeconds += Math.max(0, spentSeconds) + overtimeSeconds;
       });
 
       const hours = Math.floor(totalSeconds / 3600);
@@ -2130,19 +2251,21 @@
     }
 
     function renderDurationCard(task) {
-      const isRunning = task.status === 'running';
+      const isOvertime = task.overtime > 0;
+      const isRunning = task.status === 'running' && !isOvertime;
       const remaining = task.remaining > 0 ? task.remaining : task.duration * 60;
       const icon = isRunning ? '&#9208;' : '&#9654;';
+      const displayTime = isOvertime ? formatOvertime(task.overtime) : formatCountdown(remaining);
 
       return `
-        <div class="task-card ${isRunning ? 'running' : ''}" data-id="${task.id}">
+        <div class="task-card ${isOvertime ? 'overtime' : ''}" data-id="${task.id}">
           <div class="task-info">
             <div class="task-name">${escapeHtml(task.name)}</div>
             <div class="task-time-range">${task.startTime} - ${task.endTime}</div>
           </div>
           <div class="task-timer">
-            <span class="timer-display ${isRunning ? 'running' : ''}">${formatCountdown(remaining)}</span>
-            <button class="play-btn ${isRunning ? 'running' : ''}" data-id="${task.id}">${icon}</button>
+            <span class="timer-display ${isOvertime ? 'overtime' : ''}">${displayTime}</span>
+            <button class="play-btn" data-id="${task.id}">${icon}</button>
             <button class="task-delete-btn" data-id="${task.id}">&#215;</button>
           </div>
         </div>
@@ -2151,12 +2274,16 @@
 
     function renderTimelineCard(task) {
       const isCompleted = task.completed;
+      const actualMins = task.actualDuration || task.duration;
+      const timeDisplay = isCompleted && task.actualDuration
+        ? `实际 ${actualMins} 分钟`
+        : `${task.startTime} - ${task.endTime}`;
 
       return `
         <div class="timeline-card ${isCompleted ? 'completed' : ''}" data-id="${task.id}">
           <button class="checkbox ${isCompleted ? 'checked' : ''}" data-id="${task.id}"></button>
           <div class="timeline-name">${escapeHtml(task.name)}</div>
-          <div class="timeline-time">${task.startTime} - ${task.endTime}</div>
+          <div class="timeline-time">${timeDisplay}</div>
           <button class="task-delete-btn" data-id="${task.id}">&#215;</button>
         </div>
       `;
@@ -2272,11 +2399,13 @@
       }
 
       state.taskIntervals[taskId] = setInterval(() => {
-        task.remaining--;
-
-        if (task.remaining <= 0) {
-          completeTask(taskId);
+        if (task.remaining > 0) {
+          task.remaining--;
+          saveTasks();
+          updateTimerDisplay(taskId);
         } else {
+          // Overtime counting
+          task.overtime++;
           saveTasks();
           updateTimerDisplay(taskId);
         }
@@ -2284,6 +2413,7 @@
 
       renderTasks();
       updateFocusStats();
+      startEyeCareTimer();
     }
 
     function pauseTimer(taskId) {
@@ -2301,6 +2431,7 @@
 
       renderTasks();
       updateFocusStats();
+      checkEyeCareTimer();
     }
 
     function completeTask(taskId) {
@@ -2326,10 +2457,12 @@
           // Timeline mode will show it as completed (grayed out)
           renderTasks();
           updateFocusStats();
+          checkEyeCareTimer();
         }, 400);
       } else {
         renderTasks();
         updateFocusStats();
+        checkEyeCareTimer();
       }
     }
 
@@ -2341,7 +2474,13 @@
       if (card) {
         const display = card.querySelector('.timer-display');
         if (display) {
-          display.textContent = formatCountdown(task.remaining);
+          if (task.overtime > 0) {
+            display.textContent = formatOvertime(task.overtime);
+            display.classList.add('overtime');
+            card.classList.add('overtime');
+          } else {
+            display.textContent = formatCountdown(task.remaining);
+          }
         }
       }
     }
@@ -2350,9 +2489,25 @@
       const task = state.tasks.find(t => t.id === taskId);
       if (!task) return;
 
-      task.completed = !task.completed;
+      if (!task.completed) {
+        // Marking as complete - record final duration and remove from state
+        task.completed = true;
+        task.finalDuration = task.duration * 60 + task.overtime; // Record total seconds
+        task.actualDuration = task.duration + Math.ceil(task.overtime / 60); // in minutes
+
+        // Remove the running interval if exists
+        if (state.taskIntervals[taskId]) {
+          clearInterval(state.taskIntervals[taskId]);
+          delete state.taskIntervals[taskId];
+        }
+
+        // Remove from state completely (timeline will show completed task from a different source if needed)
+        // Actually for now, let's just mark it and let renderTasks filter it out
+        // But we need to show it in timeline with actual duration
+      }
       saveTasks();
       renderTasks();
+      checkEyeCareTimer();
     }
 
     function deleteTask(taskId) {
@@ -2364,6 +2519,7 @@
       saveTasks();
       renderTasks();
       updateFocusStats();
+      checkEyeCareTimer();
     }
 
     function clearAllTasks() {
@@ -2377,6 +2533,7 @@
         saveTasks();
         renderTasks();
         updateFocusStats();
+        pauseEyeCareTimer();
       });
     }
 
@@ -2440,7 +2597,8 @@
         status: 'idle',
         completed: false,
         createdAt: Date.now(),
-        startedAt: null  // 记录计时器开始时间，用于后台运行
+        startedAt: null,
+        overtime: 0  // 正向计时秒数
       };
 
       state.tasks.push(task);
@@ -2818,6 +2976,93 @@
       eyeBreakEl.classList.remove('show');
     }
 
+    // ===== Eye Care Timer =====
+    function startEyeCareTimer() {
+      if (!state.eyeBreakEnabled) return;
+      if (state.eyeCareInterval) return;
+
+      // If no remaining time, initialize to full interval
+      if (state.eyeCareRemaining <= 0) {
+        state.eyeCareRemaining = state.eyeBreakInterval;
+      }
+
+      state.eyeCareStartTime = Date.now();
+
+      eyeCareEl.classList.add('active');
+      eyeCareEl.classList.remove('warning');
+
+      state.eyeCareInterval = setInterval(() => {
+        if (state.eyeCareRemaining > 0) {
+          state.eyeCareRemaining -= 1000;
+          updateEyeCareUI();
+        }
+
+        if (state.eyeCareRemaining <= 0) {
+          eyeCareEl.classList.add('warning');
+          eyeCareEl.classList.remove('active');
+        }
+      }, 1000);
+
+      updateEyeCareUI();
+    }
+
+    function pauseEyeCareTimer() {
+      if (state.eyeCareInterval) {
+        clearInterval(state.eyeCareInterval);
+        state.eyeCareInterval = null;
+      }
+      eyeCareEl.classList.remove('active');
+    }
+
+    function resetEyeCareTimer() {
+      state.eyeCareRemaining = state.eyeBreakInterval;
+      state.eyeCareStartTime = Date.now();
+      eyeCareEl.classList.remove('warning');
+      if (hasRunningTask()) {
+        eyeCareEl.classList.add('active');
+      }
+      updateEyeCareUI();
+    }
+
+    function hasRunningTask() {
+      return state.tasks.some(t => t.status === 'running');
+    }
+
+    function checkEyeCareTimer() {
+      const hasActiveTasks = state.tasks.some(t => !t.completed && (t.status === 'running' || t.overtime > 0));
+      if (!hasActiveTasks) {
+        pauseEyeCareTimer();
+      }
+    }
+
+    function updateEyeCareUI() {
+      const total = state.eyeBreakInterval;
+      const remaining = Math.max(0, state.eyeCareRemaining);
+      const elapsed = total - remaining;
+      const progress = (elapsed / total) * 100;
+
+      eyeCareProgress.style.width = `${progress}%`;
+
+      if (remaining <= 0) {
+        eyeCareStatus.textContent = '点击重置';
+      } else {
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        eyeCareStatus.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+      }
+
+      // Save eye care state
+      saveToStorage(STORAGE_KEYS.eyeCare, {
+        eyeCareRemaining: state.eyeCareRemaining
+      });
+    }
+
+    // Eye care reset button handler
+    eyeCareReset.addEventListener('click', (e) => {
+      e.stopPropagation();
+      resetEyeCareTimer();
+    });
+
     // ===== Event Listeners =====
     modeTabs.forEach(tab => {
       tab.addEventListener('click', () => setMode(tab.dataset.mode));
@@ -2905,6 +3150,10 @@
         if (state.currentPage === 'home' && state.mode === 'duration') {
           startEyeBreakTimer();
         }
+        // Resume eye care timer if any task is running
+        if (hasRunningTask()) {
+          startEyeCareTimer();
+        }
       }
     });
 
@@ -2914,13 +3163,18 @@
       state.tasks.forEach(task => {
         if (task.status === 'running' && task.startedAt) {
           const elapsed = Math.floor((now - task.startedAt) / 1000);
+          const prevRemaining = task.remaining;
           task.remaining = Math.max(0, task.remaining - elapsed);
-          task.startedAt = now;  // 更新开始时间以便后续计算
-          if (task.remaining <= 0) {
-            completeTask(task.id);
-          } else {
-            saveTasks();
+
+          // If remaining reaches 0, start overtime counting
+          if (prevRemaining > 0 && task.remaining <= 0) {
+            task.overtime = elapsed - prevRemaining;
+          } else if (task.remaining <= 0) {
+            task.overtime += elapsed;
           }
+
+          task.startedAt = now;  // 更新开始时间以便后续计算
+          saveTasks();
         }
       });
       renderTasks();
@@ -2940,6 +3194,12 @@
 
       if (state.currentPage === 'home' && state.mode === 'duration') {
         startEyeBreakTimer();
+      }
+
+      // Start eye care timer if any task is running
+      const hasActiveTasks = state.tasks.some(t => !t.completed && (t.status === 'running' || t.overtime > 0));
+      if (hasActiveTasks) {
+        startEyeCareTimer();
       }
     }
 
