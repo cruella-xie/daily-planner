@@ -1834,16 +1834,10 @@
     }
 
     function checkDate() {
+      // 不再自动清空任务，任务由用户手动删除
+      // 只更新日期记录
       const today = new Date().toDateString();
-      const lastDate = loadFromStorage(STORAGE_KEYS.lastDate);
-      if (lastDate !== today) {
-        state.tasks = [];
-        saveToStorage(STORAGE_KEYS.tasks, []);
-        // Reset must tasks completed status for new day
-        state.mustTasks.forEach(t => t.completed = false);
-        saveToStorage(STORAGE_KEYS.mustTasks, state.mustTasks);
-        saveToStorage(STORAGE_KEYS.lastDate, today);
-      }
+      saveToStorage(STORAGE_KEYS.lastDate, today);
     }
 
     function loadAllData() {
@@ -2127,7 +2121,6 @@
       $$('.swipe-container').forEach(container => {
         let startX = 0;
         let currentX = 0;
-        let isSwiped = false;
         const content = container.querySelector('.swipe-content');
 
         container.addEventListener('touchstart', (e) => {
@@ -2135,7 +2128,6 @@
           if (e.target.closest('button')) return;
           startX = e.touches[0].clientX;
           currentX = 0;
-          isSwiped = false;
           content.style.transition = 'none';
         }, { passive: true });
 
@@ -2157,16 +2149,17 @@
           if (currentX < -60) {
             container.classList.add('swiped');
             content.style.transform = 'translateX(-80px)';
-            isSwiped = true;
+            container.dataset.swiped = 'true';
           } else {
             container.classList.remove('swiped');
             content.style.transform = '';
+            container.dataset.swiped = 'false';
           }
         });
 
         container.querySelector('.delete-bg').addEventListener('click', (e) => {
           e.stopPropagation();
-          if (isSwiped) {
+          if (container.dataset.swiped === 'true') {
             // Check if it's a task item or a regular task
             if (container.closest('.tasks-list')) {
               deleteTaskItem(container.dataset.id);
@@ -2195,6 +2188,7 @@
       if (!task) return;
 
       task.status = 'running';
+      task.startedAt = Date.now();  // 记录开始时间
       saveTasks();
 
       if (state.taskIntervals[taskId]) {
@@ -2220,6 +2214,7 @@
       if (!task) return;
 
       task.status = 'paused';
+      task.startedAt = null;  // 清除开始时间
       saveTasks();
 
       if (state.taskIntervals[taskId]) {
@@ -2240,6 +2235,7 @@
       if (task) {
         task.completed = true;
         task.status = 'completed';
+        task.startedAt = null;  // 清除开始时间
         saveTasks();
       }
 
@@ -2361,7 +2357,8 @@
         remaining: duration * 60,
         status: 'idle',
         completed: false,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        startedAt: null  // 记录计时器开始时间，用于后台运行
       };
 
       state.tasks.push(task);
@@ -2818,11 +2815,31 @@
     // Page visibility API - keep timers running in background
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
+        // 页面恢复时，重新计算所有运行中计时器的时间
+        recalculateTimers();
         if (state.currentPage === 'home' && state.mode === 'duration') {
           startEyeBreakTimer();
         }
       }
     });
+
+    // 重新计算后台运行时的计时器时间
+    function recalculateTimers() {
+      const now = Date.now();
+      state.tasks.forEach(task => {
+        if (task.status === 'running' && task.startedAt) {
+          const elapsed = Math.floor((now - task.startedAt) / 1000);
+          task.remaining = Math.max(0, task.remaining - elapsed);
+          task.startedAt = now;  // 更新开始时间以便后续计算
+          if (task.remaining <= 0) {
+            completeTask(task.id);
+          } else {
+            saveTasks();
+          }
+        }
+      });
+      renderTasks();
+    }
 
     // ===== Init =====
     function init() {
