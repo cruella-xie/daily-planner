@@ -2121,13 +2121,16 @@
       $$('.swipe-container').forEach(container => {
         let startX = 0;
         let currentX = 0;
+        let isSwiped = false;
         const content = container.querySelector('.swipe-content');
+        const deleteBg = container.querySelector('.delete-bg');
 
         container.addEventListener('touchstart', (e) => {
           // Don't start swipe if touch started on a button or checkbox
           if (e.target.closest('button')) return;
           startX = e.touches[0].clientX;
           currentX = 0;
+          isSwiped = false;
           content.style.transition = 'none';
         }, { passive: true });
 
@@ -2149,18 +2152,19 @@
           if (currentX < -60) {
             container.classList.add('swiped');
             content.style.transform = 'translateX(-80px)';
-            container.dataset.swiped = 'true';
+            isSwiped = true;
           } else {
             container.classList.remove('swiped');
             content.style.transform = '';
-            container.dataset.swiped = 'false';
+            isSwiped = false;
           }
         });
 
-        container.querySelector('.delete-bg').addEventListener('click', (e) => {
+        deleteBg.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (container.dataset.swiped === 'true') {
-            // Check if it's a task item or a regular task
+          // Check if actually swiped by transform position
+          const transform = content.style.transform;
+          if (transform === 'translateX(-80px)' || isSwiped) {
             if (container.closest('.tasks-list')) {
               deleteTaskItem(container.dataset.id);
             } else {
